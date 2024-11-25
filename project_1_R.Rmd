@@ -1,0 +1,174 @@
+```{R}
+##### PROJECT 1 WITH R ##### 
+
+#Loaded necessary libraries
+library(ggplot2)# This library enables layering of data and aesthetics, making it easy to build complex visualizations by adding layers incrementally.
+library(dplyr)# This library focuses on simplicity and performance for tasks like filtering, selecting, arranging, mutating, and summarizing data.
+data=read.csv("C:\\Users\\danar\\Desktop\\week_5\\r project data_este.csv")
+str(data)#Data Frame
+summary(data)#607 obs. of  12 variables
+
+```
+```{R}
+#First, is imortant to understand the distribution for All Employees
+#This histogram show the overall distributions of salaries in USD for all employees in the dataset.
+#Helps identify the general range and frequency of salaries
+##### 1. Salary Distribution for All Employees
+ggplot(data, aes(x=salary_in_usd)) +
+geom_histogram(binwidth=10000, fill="blue", color="red") +
+labs(title="Salary Distribution (USD)", x="Salary in USD", y="Frequencia")
+```
+
+
+```{R}
+##### 2. Salary Comparison: U.S. vs Offshore
+#This histogram compares the salary distributions for employees based in the United States (US-Based) versus those offshore. Each bar is split by location
+#Compare the salary ranges for U.S.-based employees against offshore employees
+data= data %>%
+mutate(Location=ifelse(employee_residence == "US", "US-Based", "Offshore"))
+ggplot(data, aes(x=salary_in_usd, fill=Location)) +
+geom_histogram(binwidth=10000, position="dodge", alpha=0.7) + 
+labs(title = "Salary Comparison: US-Based employers vs Offshore employers", x="Salary in American Dollars", y="Frequency") +
+scale_fill_manual(values = c("US-Based" = "blue", "Offshore" = "red"))
+```
+
+```{R}
+##### 3. Salary by Experience Level
+#This histogram divides the salary data based on experience levels (Entry-level, Mid-level, Senior-level, Executive-level). Each group has its own color
+#This allows to see trends, such as higher salaries for Senior and Executive roles, and helps ensure that the company offers competitive rates for experience levels
+ggplot(data, aes(x=salary_in_usd, fill=experience_level)) +#"fill is an aesthetic that determines the color used to fill elements in the plot" Not sure how this part of the ggplot works, but without it, whe I try to run it it give me error
+geom_histogram(binwidth=10000, position="dodge", alpha=0.7) +#"dodge" places overlapping bars, which I think make it looks easier to read
+labs(title="Salary Distribution by Experience Levels", x = "Salary in American Dollars", y = "Frequency") +
+scale_fill_brewer(palette="Set3")#The other palette were hard to see the different colors 
+#scale_fill_brewer, I found this function when I asked to an AI, different ways to make histogrmas. An histogram, in my opinnion shows better the different informations in a graph rather a plot chart which is a little confusing
+```
+
+```{R}
+#This histogram shows the frequency of different remote work ratios: No remote work, partially remote, fully remote levels in other words this shows correlation between remote work and salary
+# 4. Remote Work Ratios
+ggplot(data, aes(x=remote_ratio)) +
+geom_histogram(binwidth = 10, fill="blue", color="red") +#Blue and re to show contrast
+labs(title="Remote Work Ratios", x="Remote Work Percentage", y="Frequency")
+```
+```{R}
+#It gave me error, I am reloading the package
+library(ggplot2)
+library(dplyr)
+
+
+# Group data by job title and calculate summary statistics
+job_title_summary=data %>%
+group_by(job_title) %>%
+summarise(
+Mean_Salary=mean(salary_in_usd, na.rm = TRUE),
+Median_Salary=median(salary_in_usd, na.rm = TRUE),
+Min_Salary=min(salary_in_usd, na.rm = TRUE),
+Max_Salary=max(salary_in_usd, na.rm = TRUE),
+Count=n()
+) %>%
+arrange(desc(Mean_Salary))#In descend show better the difference
+print(job_title_summary)
+
+```
+
+
+```{R}
+# Load required libraries, just in case, last part gave me error, I am reloading the package
+library(ggplot2)
+library(dplyr)
+# Grouping data by remote work ratio and calculate summary statistics
+remote_work_summary <- data %>%
+group_by(remote_ratio) %>%
+summarise(
+Mean_Salary=mean(salary_in_usd, na.rm = TRUE),
+Median_Salary=median(salary_in_usd, na.rm = TRUE),
+Min_Salary=min(salary_in_usd, na.rm = TRUE),
+Max_Salary=max(salary_in_usd, na.rm = TRUE),
+Count=n()
+) %>%
+arrange(remote_ratio)#just in case to keep it neat
+print(remote_work_summary)
+```
+
+
+
+```{R}
+ggplot(remote_work_summary, aes(x=factor(remote_ratio), y=Mean_Salary, fill=factor(remote_ratio))) +
+geom_bar(stat="identity") +
+labs(
+title="Mean Salary by Remote Work Ratio",
+x="Remote Work Ratio (%)",
+y="Mean Salary in USD"
+)+
+scale_fill_brewer(palette="Set2")
+#Shows the average, median, minimum, and maximum salaries for each remote work category (0, 50, 100).
+#Helps identify whether fully remote roles (100%) offer higher or lower salaries on averag
+```
+
+```{R}
+offshore_data=data %>%
+filter(employee_residence!="US")
+#Solo los del extranjero!!!
+##### Group data by work year and calculate salary statistics
+offshore_trend=offshore_data %>%
+group_by(work_year) %>%
+summarise(
+Mean_Salary=mean(salary_in_usd, na.rm=TRUE),
+Median_Salary=median(salary_in_usd, na.rm=TRUE),
+Min_Salary=min(salary_in_usd, na.rm=TRUE),
+Max_Salary=max(salary_in_usd, na.rm=TRUE),
+Count=n()
+)
+#Para ver que tal esta
+print(offshore_trend)
+```
+
+```{R}
+ggplot(offshore_trend, aes(x=work_year)) +
+geom_line(aes(y=Mean_Salary, color="Mean Salary"), size=1) +
+geom_line(aes(y=Median_Salary, color="Median Salary"), size=1) +
+labs(
+title="Offshore Salary Trend Over Time",
+x="Years",
+y="Salari in American Dollars",
+color="Legend"
+)+
+scale_color_manual(values = c("Mean Salary" = "blue", "Median Salary" = "green")) +
+theme_minimal()
+#Here I enter codes to analyze salary trends offshore, the code focus on employees who are not based in the United States and examine how salaries have changed over different times. This can help understand if offshore salaries are increasing or stable
+#If the mean salary increasing, it indicate a general upward trending in offshore salaries
+```
+
+```{R}
+library(ggplot2)#just in case!
+data=read.csv("r project data_este.csv")
+
+#Calculation of average salary by job titles, for this part I search online how to this part, it gave me many times erro after error in syntaxis
+avg_salary_by_job=aggregate(salary_in_usd ~ job_title, data = data, FUN = mean)
+
+#Bar chart (No se si deberia cambiarlo pero lo dejare asi)
+ggplot(avg_salary_by_job, aes(x = reorder(job_title, salary_in_usd), y = salary_in_usd)) +
+  geom_bar(stat ="identity", fill = "blue") +
+  coord_flip() +
+  labs(title = "Average Salaries by Job Title (in US Dollars)", 
+       x = "Job Title", 
+       y = "Average Salary american dollars") +
+  theme_minimal()
+#Not sure how to seperate the names 
+```
+
+```{R}
+data=read.csv("r project data_este.csv")
+
+_!#Filter data for offshore employees
+offshore_data=subset(data,company_location!="US")
+#Create a histogram for offshore salaries in USD
+ggplot(offshore_data, aes(x = salary_in_usd)) +
+geom_histogram(binwidth = 10000, fill = "blue", color = "black", alpha = 0.7) +
+labs(
+title ="Histogram of Offshore Salaries (in USD)",
+x = "Salary in USD",
+y = "Frequency"
+) +
+theme_minimal()
+```
